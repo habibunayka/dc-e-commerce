@@ -6,6 +6,8 @@ use App\Filament\Resources\ProductResource\Pages;
 use App\Models\Product;
 use Filament\Forms;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -15,6 +17,7 @@ use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Actions\ViewAction;
+use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
@@ -24,12 +27,19 @@ class ProductResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     protected static ?string $navigationLabel = 'Produk';
-    protected static ?string $navigationGroup = 'Inventory';
+
+    protected static ?string $label = 'Produk ';
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
+                Select::make('category_id')
+                    ->relationship('category', 'name')
+                    ->required()
+                    ->label('Kategori Produk')
+                    ->placeholder('Isi Kategori produk'),
+
                 Forms\Components\TextInput::make('name')
                     ->required()
                     ->maxLength(255)
@@ -67,14 +77,27 @@ class ProductResource extends Resource
                     ->label('Stok Produk')
                     ->placeholder('Isi stok produk'),
 
-                FileUpload::make('photo')
-                    ->image()
+                Repeater::make('members')
+                    ->relationship('photos')
                     ->required()
-                    ->label('Foto Produk')
-                    ->directory('product-photos')
+                    ->schema([
+                        FileUpload::make('path')
+                            ->image()
+                            ->required()
+                            ->label('Foto Produk')
+                            ->directory('photo')
+                            ->columnSpanFull()
+                            ->maxFiles(1)
+                            ->imageEditor()
+                            ->imageCropAspectRatio('1:1')
+                    ])
                     ->columnSpanFull()
-                    ->maxFiles(1)
-                    ->directory('photo'),
+                    ->grid([
+                        'sm' => 2,
+                        'md' => 3,
+                        'lg' => 4,
+                    ])
+                    ->maxItems(3),
 
                 Forms\Components\Textarea::make('description')
                     ->required()
@@ -89,20 +112,20 @@ class ProductResource extends Resource
     {
         return $table
             ->columns([
+                TextColumn::make('category.name')
+                    ->sortable()
+                    ->searchable()
+                    ->label('Kategori'),
+
                 TextColumn::make('name')
                     ->label('Nama Produk')
-                    ->sortable()
-                    ->searchable(),
-
-                TextColumn::make('slug')
-                    ->label('Slug Produk')
                     ->sortable()
                     ->searchable(),
 
                 TextColumn::make('price')
                     ->label('Harga')
                     ->sortable()
-                    ->money('IDR'), // Format harga dalam mata uang
+                    ->money('IDR'),
 
                 TextColumn::make('size')
                     ->label('Ukuran'),
@@ -115,7 +138,7 @@ class ProductResource extends Resource
                     ->label('Stok')
                     ->sortable(),
 
-                ImageColumn::make('photo')
+                ImageColumn::make('photos.path')
                     ->label('Foto Produk')
                     ->circular(),
 
@@ -125,18 +148,17 @@ class ProductResource extends Resource
                     ->sortable(),
             ])
             ->filters([
-                // Filter untuk melihat data yang soft deleted
                 Tables\Filters\TrashedFilter::make(),
+                SelectFilter::make('category')
+                    ->label('Filter Kategori')
+                    ->relationship('category', 'name'),
             ])
             ->actions([
                 EditAction::make(),
                 ViewAction::make(),
-                DeleteAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                Tables\Actions\DeleteBulkAction::make(),
             ]);
     }
 

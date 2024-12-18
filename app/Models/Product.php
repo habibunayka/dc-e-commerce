@@ -14,32 +14,27 @@ class Product extends Model
 
     protected $fillable = [
         'name',
+        'category_id',
         'slug',
         'price',
         'size',
         'weight',
         'stock',
-        'photo',
         'description',
     ];
-
-    // Mutator: Buat slug otomatis dari name
-    protected static function booted()
+    public function setNameAttribute($value)
     {
-        static::creating(function ($product) {
-            if (empty($product->slug)) {
-                $product->slug = Str::random(12);
-            }
-        });
+        $this->attributes['name'] = $value;
+        $this->attributes['slug'] = Str::slug($value);
+    }
 
-        static::updating(function ($product) {
-            if ($product->isDirty('photo')) {
-                $oldPhoto = $product->getOriginal('photo');
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
 
-                if ($oldPhoto && Storage::disk('public')->exists($oldPhoto)) {
-                    Storage::disk('public')->delete($oldPhoto);
-                }
-            }
-        });
+    public function photos()
+    {
+        return $this->hasMany(ProductPhoto::class);
     }
 }

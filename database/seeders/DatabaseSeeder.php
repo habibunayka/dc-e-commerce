@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Category;
 use App\Models\User;
 use Carbon\Carbon;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -31,6 +32,24 @@ class DatabaseSeeder extends Seeder
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now(),
             ]
+        ]);
+
+        Category::insert([
+            [
+                'name' => 'Laptop',
+                'created_at' => Carbon::now(),
+                'updated_at'=> Carbon::now(),
+            ],
+            [
+                'name' => 'Handphone',
+                'created_at' => Carbon::now(),
+                'updated_at'=> Carbon::now(),
+            ],
+            [
+                'name' => 'Tablet',
+                'created_at' => Carbon::now(),
+                'updated_at'=> Carbon::now(),
+            ],
         ]);
     }
 }
